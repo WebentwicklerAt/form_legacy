@@ -28,6 +28,18 @@ plugin.tx_form {
 				#
 				# @ToDo: add more details
 			FORM {
+					# compatibilityMode
+					# Used by: frontend
+					# Overwritable by user: TRUE
+					# Only evaluated for FORM element
+					#
+					# If set to 1 tx_form acts almost like in TYPO3 6.2.
+					# This setting can be overwritten in the FORM object.
+					# @ToDo: add more details
+					#
+					# only for FORM
+					compatibilityMode = 1
+
 					# themeName
 					# Used by: frontend, wizard (not implemented right now)
 					# Overwritable by user: TRUE

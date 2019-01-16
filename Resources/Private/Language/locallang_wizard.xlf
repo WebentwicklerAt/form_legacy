@@ -792,6 +792,9 @@
 			<trans-unit id="postprocessor_properties_senderemail">
 				<source>Email address of the sender</source>
 			</trans-unit>
+			<trans-unit id="postprocessor_properties_senderemailfield">
+				<source>Name of field of email address of the sender</source>
+			</trans-unit>
 			<trans-unit id="postprocessor_properties_subject">
 				<source>Subject</source>
 			</trans-unit>

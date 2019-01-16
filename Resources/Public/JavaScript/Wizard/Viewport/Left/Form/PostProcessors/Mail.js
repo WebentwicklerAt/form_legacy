@@ -24,7 +24,8 @@ TYPO3.Form.Wizard.Viewport.Left.Form.PostProcessors.Mail = Ext.extend(TYPO3.Form
 		Ext.apply(this, {
 			configuration: {
 				recipientEmail: '',
-				senderEmail: ''
+				senderEmail: '',
+				senderEmailField: ''
 			}
 		});
 		TYPO3.Form.Wizard.Viewport.Left.Form.PostProcessors.Mail.superclass.constructor.apply(this, arguments);

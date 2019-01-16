@@ -20,6 +20,7 @@ use TYPO3\CMS\Form\Domain\Model\Configuration;
 use TYPO3\CMS\Form\Domain\Model\Element;
 use TYPO3\CMS\Form\Domain\Model\ValidationElement;
 use TYPO3\CMS\Form\Mvc\Controller\ControllerContext;
+use TYPO3\CMS\Form\Utility\CompatibilityLayerUtility;
 use TYPO3\CMS\Form\Utility\FormUtility;
 
 /**
@@ -30,6 +31,11 @@ use TYPO3\CMS\Form\Utility\FormUtility;
  */
 class FormBuilder
 {
+    /**
+     * @var string
+     */
+    const COMPATIBILITY_THEME_NAME = 'Compatibility';
+
     /**
      * @param Configuration $configuration
      * @return FormBuilder
@@ -51,6 +57,11 @@ class FormBuilder
      * @var \TYPO3\CMS\Extbase\Service\TypoScriptService
      */
     protected $typoScriptService;
+
+    /**
+     * @var \TYPO3\CMS\Form\Utility\CompatibilityLayerUtility
+     */
+    protected $compatibilityService;
 
     /**
      * @var ValidationBuilder
@@ -152,6 +163,14 @@ class FormBuilder
     }
 
     /**
+     * Creates this object.
+     */
+    public function __construct()
+    {
+        $this->compatibilityService = CompatibilityLayerUtility::create($this);
+    }
+
+    /**
      * @return Configuration
      */
     public function getConfiguration()
@@ -181,6 +200,22 @@ class FormBuilder
     public function setControllerContext(ControllerContext $controllerContext)
     {
         $this->controllerContext = $controllerContext;
+    }
+
+    /**
+     * @return CompatibilityLayerUtility
+     */
+    public function getCompatibilityService()
+    {
+        return $this->compatibilityService;
+    }
+
+    /**
+     * @param CompatibilityLayerUtility $compatibilityService
+     */
+    public function setCompatibilityService(CompatibilityLayerUtility $compatibilityService)
+    {
+        $this->compatibilityService = $compatibilityService;
     }
 
     /**
@@ -224,6 +259,42 @@ class FormBuilder
     public function buildModel()
     {
         $userConfiguredFormTypoScript = $this->configuration->getTypoScript();
+
+        if ($this->configuration->getCompatibility()) {
+            $layout = [];
+            if (isset($userConfiguredFormTypoScript['layout.'])) {
+                $layout = $userConfiguredFormTypoScript['layout.'];
+                /* use the compatibility theme whenever if a layout is defined */
+                $this->configuration->setThemeName(static::COMPATIBILITY_THEME_NAME);
+                unset($userConfiguredFormTypoScript['layout.']);
+            }
+
+            switch ($this->getControllerAction()) {
+                case 'show':
+                    $actionLayoutKey = 'form.';
+                    break;
+                case 'confirmation':
+                    $actionLayoutKey = 'confirmationView.';
+                    break;
+                case 'process':
+                    $actionLayoutKey = 'postProcessor.';
+                    break;
+                default:
+                    $actionLayoutKey = '';
+                    break;
+            }
+            if ($actionLayoutKey && isset($userConfiguredFormTypoScript[$actionLayoutKey]['layout.'])) {
+                $actionLayout = $userConfiguredFormTypoScript[$actionLayoutKey]['layout.'];
+                $this->configuration->setThemeName(static::COMPATIBILITY_THEME_NAME);
+                unset($userConfiguredFormTypoScript[$actionLayoutKey]['layout.']);
+                $layout = array_replace_recursive($layout, $actionLayout);
+            }
+
+            if (!empty($layout)) {
+                $this->compatibilityService->setGlobalLayoutConfiguration($layout);
+            }
+        }
+
         $form = $this->createElementObject();
         $this->reviveElement($form, $userConfiguredFormTypoScript, 'FORM');
         $form->setThemeName($this->configuration->getThemeName());
@@ -271,11 +342,26 @@ class FormBuilder
             $element->setAdditionalArguments([
                 'content' => $attributeValue,
             ]);
+            /* use the compatibility theme whenever if a layout is defined */
+            if ($this->configuration->getCompatibility()) {
+                $this->compatibilityService->setElementLayouts($element, $userConfiguredElementTypoScript);
+                if (isset($userConfiguredElementTypoScript['layout'])) {
+                    $this->configuration->setThemeName(static::COMPATIBILITY_THEME_NAME);
+                    unset($userConfiguredElementTypoScript['layout']);
+                }
+            }
         } else {
             $this->setAttributes($elementBuilder, $element, $userConfiguredElementTypoScript);
             $userConfiguredElementTypoScript = $elementBuilder->getUserConfiguredElementTyposcript();
             $this->setValidationMessages($element);
-
+            /* use the compatibility theme whenever if a layout is defined */
+            if ($this->configuration->getCompatibility()) {
+                $this->compatibilityService->setElementLayouts($element, $userConfiguredElementTypoScript);
+                if (isset($userConfiguredElementTypoScript['layout'])) {
+                    $this->configuration->setThemeName(static::COMPATIBILITY_THEME_NAME);
+                    unset($userConfiguredElementTypoScript['layout']);
+                }
+            }
             $this->signalSlotDispatcher->dispatch(
                 __CLASS__,
                 'txFormAfterElementCreation',
@@ -544,6 +630,16 @@ class FormBuilder
     public function getControllerAction()
     {
         return $this->controllerContext->getRequest()->getControllerActionName();
+    }
+
+    /**
+     * If TRUE form try to respect the layout settings
+     *
+     * @return bool
+     */
+    public function getCompatibilityMode()
+    {
+        return $this->configuration->getCompatibility();
     }
 
     /**

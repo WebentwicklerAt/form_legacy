@@ -192,7 +192,7 @@ prefix = tx_form
 							showPostProcessors = mail, redirect
 							postProcessors {
 								mail {
-									showProperties = recipientEmail, senderEmail, subject
+									showProperties = recipientEmail, senderEmail, senderEmailField, subject
 								}
 								redirect {
 									showProperties = destination

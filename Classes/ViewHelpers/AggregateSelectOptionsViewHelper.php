@@ -47,6 +47,9 @@ class AggregateSelectOptionsViewHelper extends AbstractViewHelper
      */
     public function render()
     {
+        $this->options = [];
+        $this->selectedValues = [];
+
         /** @var Element $model */
         $model = $this->arguments['model'];
         /** @var Element $element */

@@ -82,7 +82,20 @@ TYPO3.Form.Wizard.Viewport.Left.Form.PostProcessors.PostProcessor = Ext.extend(E
 					formItems.push({
 						fieldLabel: TYPO3.l10n.localize('postprocessor_properties_senderemail'),
 						name: 'senderEmail',
-						allowBlank: false,
+						allowBlank: true,
+						listeners: {
+							'triggerclick': {
+								scope: this,
+								fn: this.storeValue
+							}
+						}
+					});
+					break;
+				case 'senderEmailField':
+					formItems.push({
+						fieldLabel: 'sender&shy;Email&shy;Field',
+						name: 'senderEmailField',
+						allowBlank: true,
 						listeners: {
 							'triggerclick': {
 								scope: this,
@@ -262,7 +275,8 @@ TYPO3.Form.Wizard.Viewport.Left.Form.PostProcessors.PostProcessor = Ext.extend(E
 			// The object has not been found or constructed wrong
 			allowedFields = [
 				'recipientEmail',
-				'senderEmail'
+				'senderEmail',
+				'senderEmailField'
 			];
 		}
 

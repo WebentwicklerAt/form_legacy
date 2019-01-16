@@ -120,7 +120,8 @@ class FormJsonElement extends \TYPO3\CMS\Form\Domain\Model\Json\ContainerJsonEle
             $this->configuration['postProcessor'] = [
                 'mail' => [
                     'recipientEmail' => '',
-                    'senderEmail' => ''
+                    'senderEmail' => '',
+                    'senderEmailField' => ''
                 ]
             ];
         }
